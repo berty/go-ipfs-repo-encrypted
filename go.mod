@@ -1,4 +1,4 @@
-module github.com/berty/go-ipfs-repo-encrypted
+module berty.tech/go-ipfs-repo-encrypted
 
 go 1.17
 

@@ -132,7 +132,7 @@ func formatSchema(table string) string {
 	for i, c := range columnsDef {
 		columns[i] = c.name + " " + c.kind
 	}
-	return fmt.Sprintf(`CREATE TABLE %s (
+	return fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 	%s
 ) WITHOUT ROWID;
 `, table, strings.Join(columns, ",\n\t"))

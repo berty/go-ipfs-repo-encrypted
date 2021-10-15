@@ -50,3 +50,13 @@ func TestSetAPIAddrTwice(t *testing.T) {
 	require.NoError(t, r.SetAPIAddr(ma.StringCast("/ip4/127.0.0.1")))
 	require.NoError(t, r.SetAPIAddr(ma.StringCast("/ip4/127.0.0.42")))
 }
+
+func TestNewSQLiteDatastoreTwice(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "db.sqlite")
+	ds, err := NewSQLiteDatastore("sqlite3", dbPath, "data")
+	require.NoError(t, err)
+	require.NoError(t, ds.Close())
+	ds, err = NewSQLiteDatastore("sqlite3", dbPath, "data")
+	require.NoError(t, err)
+	require.NoError(t, ds.Close())
+}

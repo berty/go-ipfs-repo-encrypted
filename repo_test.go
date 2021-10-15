@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/ipfs/go-datastore"
 	config "github.com/ipfs/go-ipfs-config"
 	ma "github.com/multiformats/go-multiaddr"
 	"github.com/stretchr/testify/require"
@@ -58,5 +59,23 @@ func TestNewSQLiteDatastoreTwice(t *testing.T) {
 	require.NoError(t, ds.Close())
 	ds, err = NewSQLiteDatastore("sqlite3", dbPath, "data")
 	require.NoError(t, err)
+	require.NoError(t, ds.Close())
+}
+
+func TestGetSize(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "db.sqlite")
+	ds, err := NewSQLiteDatastore("sqlite3", dbPath, "data")
+	require.NoError(t, err)
+
+	buf := []byte("42\x0042")
+	key := datastore.NewKey("key")
+	err = ds.Put(key, buf)
+	require.NoError(t, err)
+
+	sz, err := ds.GetSize(key)
+	require.NoError(t, err)
+
+	require.Equal(t, len(buf), sz)
+
 	require.NoError(t, ds.Close())
 }

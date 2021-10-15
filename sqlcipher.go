@@ -37,7 +37,7 @@ func NewQueries(tbl string) Queries {
 		prefixQuery:  ` WHERE key LIKE '%s%%' ORDER BY key`,
 		limitQuery:   ` LIMIT %d`,
 		offsetQuery:  ` OFFSET %d`,
-		getSizeQuery: fmt.Sprintf("SELECT octet_length(data) FROM %s WHERE key = $1", tbl),
+		getSizeQuery: fmt.Sprintf("SELECT length(data) FROM %s WHERE key = $1", tbl),
 	}
 }
 

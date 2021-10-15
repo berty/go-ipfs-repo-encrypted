@@ -2,6 +2,7 @@ package encrepo
 
 import (
 	"github.com/ipfs/go-datastore"
+	sync_ds "github.com/ipfs/go-datastore/sync"
 	"github.com/ipfs/go-ipfs/repo"
 	"github.com/pkg/errors"
 )
@@ -21,10 +22,12 @@ func open(dbPath string, key []byte) (repo.Repo, error) {
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
-	root, err := OpenSQLCipherDatastore("sqlite3", dbPath, tableName, key)
+	uroot, err := OpenSQLCipherDatastore("sqlite3", dbPath, tableName, key)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiate datastore")
 	}
+
+	root := sync_ds.MutexWrap(uroot)
 
 	conf, err := getConfigFromDatastore(root)
 	if err != nil {

@@ -1,6 +1,7 @@
 package encrepo
 
 import (
+	sync_ds "github.com/ipfs/go-datastore/sync"
 	config "github.com/ipfs/go-ipfs-config"
 	"github.com/pkg/errors"
 )
@@ -19,13 +20,15 @@ func IsInitialized(dbPath string, key []byte) (bool, error) {
 // isInitialized reports whether the repo is initialized. Caller must
 // hold the packageLock.
 func isInitialized(dbPath string, key []byte) (bool, error) {
-	ds, err := OpenSQLCipherDatastore("sqlite3", dbPath, tableName, key)
+	uds, err := OpenSQLCipherDatastore("sqlite3", dbPath, tableName, key)
 	if err == ErrDatabaseNotFound {
 		return false, nil
 	}
 	if err != nil {
 		return false, err
 	}
+
+	ds := sync_ds.MutexWrap(uds)
 
 	return isConfigInitialized(ds), nil
 }
@@ -44,10 +47,12 @@ func Init(dbPath string, key []byte, conf *config.Config) error {
 		return nil
 	}
 
-	ds, err := NewSQLCipherDatastore("sqlite3", dbPath, tableName, key)
+	uds, err := NewSQLCipherDatastore("sqlite3", dbPath, tableName, key)
 	if err != nil {
 		return err
 	}
+
+	ds := sync_ds.MutexWrap(uds)
 
 	if err := initConfig(ds, conf); err != nil {
 		return err

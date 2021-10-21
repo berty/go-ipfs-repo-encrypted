@@ -14,14 +14,14 @@ func TestRepo(t *testing.T) {
 	key := testingKey(t)
 	dbPath := filepath.Join(t.TempDir(), "db.sqlite")
 
-	isInit, err := IsInitialized(dbPath, key)
+	isInit, err := IsInitialized(dbPath)
 	require.NoError(t, err)
 	require.False(t, isInit)
 
 	err = Init(dbPath, key, &config.Config{})
 	require.NoError(t, err)
 
-	isInit, err = IsInitialized(dbPath, key)
+	isInit, err = IsInitialized(dbPath)
 	require.NoError(t, err)
 	require.True(t, isInit)
 

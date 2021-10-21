@@ -1,10 +1,10 @@
 package encrepo
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/ipfs/go-datastore"
-	ds "github.com/ipfs/go-datastore"
 	"github.com/ipfs/go-datastore/mount"
 	flatds "github.com/ipfs/go-ds-flatfs"
 	levelds "github.com/ipfs/go-ds-leveldb"
@@ -27,12 +27,19 @@ func open(path string, key []byte) (repo.Repo, error) {
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
-	isInit, err := isInitialized(path, key)
+	isInit, err := isInitialized(path)
 	if err != nil {
 		return nil, err
 	}
 	if !isInit {
 		return nil, errors.New("repo is not initialized")
+	}
+
+	if len(key) == 0 {
+		keyPath := filepath.Join(path, "storage.key")
+		if key, err = os.ReadFile(keyPath); err != nil {
+			return nil, err
+		}
 	}
 
 	root, err := newRootDatastore(path, key)
@@ -76,7 +83,7 @@ func newRootDatastore(path string, key []byte) (*mount.Datastore, error) {
 		return nil, err
 	}
 	return mount.New([]mount.Mount{
-		{Prefix: ds.NewKey(""), Datastore: elds},
-		{Prefix: ds.NewKey("data/blocks"), Datastore: efds},
+		{Prefix: datastore.NewKey(""), Datastore: elds},
+		{Prefix: datastore.NewKey("data/blocks"), Datastore: efds},
 	}), nil
 }

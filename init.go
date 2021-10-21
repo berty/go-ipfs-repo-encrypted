@@ -10,18 +10,18 @@ import (
 
 const tableName = "ipfs"
 
-func IsInitialized(dbPath string, key []byte) (bool, error) {
+func IsInitialized(dbPath string) (bool, error) {
 	// packageLock is held to ensure that another caller doesn't attempt to
 	// Init or Remove the repo while this call is in progress.
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
-	return isInitialized(dbPath, key)
+	return isInitialized(dbPath)
 }
 
 // isInitialized reports whether the repo is initialized. Caller must
 // hold the packageLock.
-func isInitialized(path string, key []byte) (bool, error) {
+func isInitialized(path string) (bool, error) {
 	dbPath := filepath.Join(path, "leveldb")
 
 	_, err := os.Stat(dbPath)
@@ -40,12 +40,21 @@ func Init(path string, key []byte, conf *config.Config) error {
 		return errors.New("Config.Datastore.Spec not supported")
 	}
 
+	storeKey := false
+	if len(key) == 0 {
+		storeKey = true
+		var err error
+		if key, err = secureRandomBytes(32); err != nil {
+			return err
+		}
+	}
+
 	// packageLock must be held to ensure that the repo is not initialized more
 	// than once.
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
-	isInit, err := isInitialized(path, key)
+	isInit, err := isInitialized(path)
 	if err != nil {
 		return err
 	}
@@ -69,6 +78,13 @@ func Init(path string, key []byte, conf *config.Config) error {
 	/*if err := migrations.WriteRepoVersion(repoPath, RepoVersion); err != nil {
 		return err
 	}*/
+
+	if storeKey {
+		keyPath := filepath.Join(path, "storage.key")
+		if err := os.WriteFile(keyPath, key, os.ModePerm); err != nil {
+			return err
+		}
+	}
 
 	return ds.Close()
 }

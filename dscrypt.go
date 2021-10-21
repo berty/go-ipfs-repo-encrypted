@@ -3,8 +3,9 @@ package encrepo
 import (
 	"crypto/cipher"
 	crand "crypto/rand"
-	"encoding/base64"
+	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/ipfs/go-datastore"
 	"github.com/ipfs/go-datastore/query"
@@ -116,11 +117,11 @@ func encryptKey(aead cipher.AEAD, encryptionKey []byte, key datastore.Key) (data
 	nonce := h.Sum(nil)[:chacha20poly1305.NonceSizeX]
 
 	ekb := append(nonce, aead.Seal(nil, nonce, kb, nil)...)
-	return datastore.NewKey(base64.RawURLEncoding.EncodeToString(ekb)), nil
+	return datastore.NewKey(strings.ToUpper(hex.EncodeToString(ekb))), nil
 }
 
 func decryptKey(aead cipher.AEAD, key datastore.Key) (datastore.Key, error) {
-	kb, err := base64.RawURLEncoding.DecodeString(key.String())
+	kb, err := hex.DecodeString(key.String())
 	if err != nil {
 		return datastore.Key{}, err
 	}

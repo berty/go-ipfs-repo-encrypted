@@ -1,7 +1,9 @@
 package encrepo
 
 import (
-	sync_ds "github.com/ipfs/go-datastore/sync"
+	"os"
+	"path/filepath"
+
 	config "github.com/ipfs/go-ipfs-config"
 	"github.com/pkg/errors"
 )
@@ -19,27 +21,31 @@ func IsInitialized(dbPath string, key []byte) (bool, error) {
 
 // isInitialized reports whether the repo is initialized. Caller must
 // hold the packageLock.
-func isInitialized(dbPath string, key []byte) (bool, error) {
-	uds, err := OpenSQLCipherDatastore("sqlite3", dbPath, tableName, key)
-	if err == ErrDatabaseNotFound {
+func isInitialized(path string, key []byte) (bool, error) {
+	dbPath := filepath.Join(path, "leveldb")
+
+	_, err := os.Stat(dbPath)
+	if os.IsNotExist(err) {
 		return false, nil
 	}
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "stat leveldb directory")
 	}
 
-	ds := sync_ds.MutexWrap(uds)
-
-	return isConfigInitialized(ds), nil
+	return true, nil
 }
 
-func Init(dbPath string, key []byte, conf *config.Config) error {
+func Init(path string, key []byte, conf *config.Config) error {
+	if len(conf.Datastore.Spec) != 0 {
+		return errors.New("Config.Datastore.Spec not supported")
+	}
+
 	// packageLock must be held to ensure that the repo is not initialized more
 	// than once.
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
-	isInit, err := isInitialized(dbPath, key)
+	isInit, err := isInitialized(path, key)
 	if err != nil {
 		return err
 	}
@@ -47,24 +53,22 @@ func Init(dbPath string, key []byte, conf *config.Config) error {
 		return nil
 	}
 
-	uds, err := NewSQLCipherDatastore("sqlite3", dbPath, tableName, key)
+	if err := os.MkdirAll(path, os.ModePerm); err != nil {
+		return err
+	}
+
+	ds, err := newRootDatastore(path, key)
 	if err != nil {
 		return err
 	}
 
-	ds := sync_ds.MutexWrap(uds)
-
 	if err := initConfig(ds, conf); err != nil {
 		return err
-	}
-
-	if len(conf.Datastore.Spec) != 0 {
-		return errors.New("Config.Datastore.Spec not supported")
 	}
 
 	/*if err := migrations.WriteRepoVersion(repoPath, RepoVersion); err != nil {
 		return err
 	}*/
 
-	return nil
+	return ds.Close()
 }

@@ -107,7 +107,11 @@ func NewSQLiteDatastore(driver, url, table string) (*sqlds.Datastore, error) {
 }
 
 func NewSQLCipherDatastore(driver, dbPath, table string, key []byte) (*sqlds.Datastore, error) {
-	ds, err := NewSQLiteDatastore(driver, dbURLFromPath(dbPath, key), table)
+	url, err := dbURLFromPath(dbPath, key)
+	if err != nil {
+		return nil, err
+	}
+	ds, err := NewSQLiteDatastore(driver, url, table)
 	if err != nil {
 		return nil, err
 	}
@@ -153,8 +157,14 @@ func OpenSQLCipherDatastore(driver, dbPath, table string, key []byte) (*sqlds.Da
 		return nil, err
 	}
 
+	// Generate db url
+	url, err := dbURLFromPath(dbPath, key)
+	if err != nil {
+		return nil, err
+	}
+
 	// Open db conn
-	db, err := sql.Open(driver, dbURLFromPath(dbPath, key))
+	db, err := sql.Open(driver, url)
 	if err != nil {
 		return nil, errors.Wrap(err, "open db")
 	}
@@ -242,10 +252,13 @@ func checkDBCrypto(dbPath string, shouldBeEncrypted bool) error {
 	return nil
 }
 
-func dbURLFromPath(dbPath string, key []byte) string {
+func dbURLFromPath(dbPath string, key []byte) (string, error) {
 	if len(key) != 0 {
+		if len(key) != 32 {
+			return "", fmt.Errorf("invalid key length, expected 32 bytes, got %d", len(key))
+		}
 		hexKey := hex.EncodeToString(key)
-		return fmt.Sprintf("%s?_pragma_key=x'%s'&_pragma_cipher_page_size=4096", dbPath, hexKey)
+		return fmt.Sprintf("%s?_pragma_key=x'%s'&_pragma_cipher_page_size=4096", dbPath, hexKey), nil
 	}
-	return dbPath
+	return dbPath, nil
 }

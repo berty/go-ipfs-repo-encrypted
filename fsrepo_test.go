@@ -65,10 +65,10 @@ func TestCanManageReposIndependently(t *testing.T) {
 	assert.Nil(Init(pathB, bKey, &config.Config{Datastore: testingDatastoreConfig()}), t, "b", "should initialize successfully")
 
 	t.Log("ensure repos initialized")
-	isInit, err := IsInitialized(pathA, aKey)
+	isInit, err := IsInitialized(pathA)
 	require.NoError(t, err)
 	require.True(t, isInit, "a should be initialized")
-	isInit, err = IsInitialized(pathB, bKey)
+	isInit, err = IsInitialized(pathB)
 	require.NoError(t, err)
 	require.True(t, isInit, "b should be initialized")
 
@@ -92,7 +92,7 @@ func TestDatastoreGetNotAllowedAfterClose(t *testing.T) {
 	path := testRepoPath("test", t)
 
 	key := testingKey(t)
-	isInit, err := IsInitialized(path, key)
+	isInit, err := IsInitialized(path)
 	require.NoError(t, err)
 	require.False(t, isInit)
 	require.NoError(t, Init(path, key, &config.Config{Datastore: testingDatastoreConfig()}))

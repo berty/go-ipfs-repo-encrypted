@@ -4,6 +4,8 @@ go 1.17
 
 require (
 	github.com/ipfs/go-datastore v0.4.6
+	github.com/ipfs/go-ds-flatfs v0.4.5
+	github.com/ipfs/go-ds-leveldb v0.4.2
 	github.com/ipfs/go-ds-sql v0.2.0
 	github.com/ipfs/go-filestore v0.0.3
 	github.com/ipfs/go-ipfs v0.10.0
@@ -15,12 +17,15 @@ require (
 	github.com/mutecomm/go-sqlcipher/v4 v4.4.2
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/crypto v0.0.0-20210813211128-0a44fdfbc16e
 )
 
 require (
+	github.com/alexbrainman/goissue34681 v0.0.0-20191006012335-3fc7a47baff5 // indirect
 	github.com/btcsuite/btcd v0.22.0-beta // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/ipfs/bbloom v0.0.4 // indirect
@@ -61,11 +66,11 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/polydawn/refmt v0.0.0-20201211092308-30ac6d18308e // indirect
 	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect
+	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/whyrusleeping/cbor-gen v0.0.0-20210219115102-f37d292932f2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.19.0 // indirect
-	golang.org/x/crypto v0.0.0-20210813211128-0a44fdfbc16e // indirect
 	golang.org/x/sys v0.0.0-20210816183151-1e6c022a8912 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect

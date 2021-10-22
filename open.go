@@ -1,8 +1,13 @@
 package encrepo
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/ipfs/go-datastore"
-	sync_ds "github.com/ipfs/go-datastore/sync"
+	"github.com/ipfs/go-datastore/mount"
+	flatds "github.com/ipfs/go-ds-flatfs"
+	levelds "github.com/ipfs/go-ds-leveldb"
 	"github.com/ipfs/go-ipfs/repo"
 	"github.com/pkg/errors"
 )
@@ -11,23 +16,36 @@ var (
 	onlyOne repo.OnlyOne
 )
 
-func Open(dbPath string, key []byte) (repo.Repo, error) {
+func Open(path string, key []byte) (repo.Repo, error) {
 	fn := func() (repo.Repo, error) {
-		return open(dbPath, key)
+		return open(path, key)
 	}
-	return onlyOne.Open(dbPath, fn)
+	return onlyOne.Open(path, fn)
 }
 
-func open(dbPath string, key []byte) (repo.Repo, error) {
+func open(path string, key []byte) (repo.Repo, error) {
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
-	uroot, err := OpenSQLCipherDatastore("sqlite3", dbPath, tableName, key)
+	isInit, err := isInitialized(path)
 	if err != nil {
-		return nil, errors.Wrap(err, "instantiate datastore")
+		return nil, err
+	}
+	if !isInit {
+		return nil, errors.New("repo is not initialized")
 	}
 
-	root := sync_ds.MutexWrap(uroot)
+	if len(key) == 0 {
+		keyPath := filepath.Join(path, "storage.key")
+		if key, err = os.ReadFile(keyPath); err != nil {
+			return nil, err
+		}
+	}
+
+	root, err := newRootDatastore(path, key)
+	if err != nil {
+		return nil, err
+	}
 
 	conf, err := getConfigFromDatastore(root)
 	if err != nil {
@@ -40,4 +58,32 @@ func open(dbPath string, key []byte) (repo.Repo, error) {
 		ks:     KeystoreFromDatastore(root, "keys"),
 		config: conf,
 	}, nil
+}
+
+func newRootDatastore(path string, key []byte) (*mount.Datastore, error) {
+	lds, err := levelds.NewDatastore(filepath.Join(path, "leveldb"), nil)
+	if err != nil {
+		return nil, err
+	}
+	elds, err := Wrap(lds, key)
+	if err != nil {
+		return nil, err
+	}
+
+	shardFunc, err := flatds.ParseShardFunc("/repo/flatfs/shard/v1/next-to-last/2")
+	if err != nil {
+		return nil, err
+	}
+	fds, err := flatds.CreateOrOpen(filepath.Join(path, "flatfs"), shardFunc, true)
+	if err != nil {
+		return nil, err
+	}
+	efds, err := Wrap(fds, key)
+	if err != nil {
+		return nil, err
+	}
+	return mount.New([]mount.Mount{
+		{Prefix: datastore.NewKey(""), Datastore: elds},
+		{Prefix: datastore.NewKey("data/blocks"), Datastore: efds},
+	}), nil
 }

@@ -1,0 +1,73 @@
+name: Go
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  go-tests-on-linux:
+    name: "Test (linux)"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        golang:
+          - 1.16.x
+          - 1.17.x
+          #- tip
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.5
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.golang }}
+      - name: Check go.mod and go.sum
+        run: |
+          go mod tidy -v
+          git --no-pager diff go.mod go.sum
+          git --no-pager diff --quiet go.mod go.sum
+      - name: Run tests
+        run: go test ./... -count=5
+
+  go-tests-on-windows:
+    name: "Test (windows)"
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        golang: ['1.17.x']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.5
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.golang }}
+      - name: Check go.mod and go.sum
+        run: |
+          go mod tidy -v
+          git --no-pager diff go.mod go.sum
+          git --no-pager diff --quiet go.mod go.sum
+      - name: Run tests
+        run: go.exe test ./... -buildmode=exe -count=5
+
+  go-tests-on-macos:
+    name: "Test (macos)"
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        golang: ['1.17.x']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.5
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.golang }}
+      - name: Check go.mod and go.sum
+        run: |
+          go mod tidy -v
+          git --no-pager diff go.mod go.sum
+          git --no-pager diff --quiet go.mod go.sum
+      - name: Run tests
+        run: go test ./... -count=5

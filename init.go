@@ -30,7 +30,13 @@ func isInitialized(dbPath string, key []byte) (bool, error) {
 
 	ds := sync_ds.MutexWrap(uds)
 
-	return isConfigInitialized(ds), nil
+	initialized := isConfigInitialized(ds)
+
+	if err := uds.Close(); err != nil {
+		return false, err
+	}
+
+	return initialized, nil
 }
 
 func Init(dbPath string, key []byte, conf *config.Config) error {
@@ -66,5 +72,5 @@ func Init(dbPath string, key []byte, conf *config.Config) error {
 		return err
 	}*/
 
-	return nil
+	return uds.Close()
 }

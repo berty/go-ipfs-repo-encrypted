@@ -2,6 +2,7 @@ package encrepo
 
 import (
 	secrand "crypto/rand"
+	"io"
 	"path/filepath"
 	"sort"
 	"testing"
@@ -11,10 +12,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func requireClose(t *testing.T, closer io.Closer) {
+	t.Helper()
+	require.NoError(t, closer.Close())
+}
+
 func TestKeystoreFromSQLiteDatastore(t *testing.T) {
 	// Instantiate datastore
 	ds, err := NewSQLiteDatastore("sqlite3", filepath.Join(t.TempDir(), "db.sqlite"), "keys")
 	require.NoError(t, err)
+	defer requireClose(t, ds)
 
 	// Generate keys
 	keysIDs := []string{"a", "b", "c"}

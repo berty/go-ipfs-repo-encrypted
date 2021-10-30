@@ -30,6 +30,7 @@ func TestRepo(t *testing.T) {
 
 	r, err := Open(dbPath, key)
 	require.NoError(t, err)
+	defer requireClose(t, r)
 
 	ds := r.Datastore()
 	require.NotNil(t, ds)
@@ -47,6 +48,7 @@ func TestSetAPIAddrTwice(t *testing.T) {
 
 	r, err := Open(dbPath, key)
 	require.NoError(t, err)
+	defer requireClose(t, r)
 
 	require.NoError(t, r.SetAPIAddr(ma.StringCast("/ip4/127.0.0.1")))
 	require.NoError(t, r.SetAPIAddr(ma.StringCast("/ip4/127.0.0.42")))
@@ -66,6 +68,7 @@ func TestGetSize(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "db.sqlite")
 	ds, err := NewSQLiteDatastore("sqlite3", dbPath, "data")
 	require.NoError(t, err)
+	defer requireClose(t, ds)
 
 	buf := []byte("42\x0042")
 	key := datastore.NewKey("key")

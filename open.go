@@ -37,7 +37,7 @@ func open(dbPath string, key []byte) (repo.Repo, error) {
 	return &encRepo{
 		root:   root,
 		ds:     NewNamespacedDatastore(root, datastore.NewKey("data")),
-		ks:     KeystoreFromDatastore(root, "keys"),
+		ks:     KeystoreFromDatastore(NewNamespacedDatastore(root, datastore.NewKey("keys"))),
 		config: conf,
 	}, nil
 }

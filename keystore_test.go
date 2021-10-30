@@ -27,7 +27,7 @@ func TestKeystoreFromSQLiteDatastore(t *testing.T) {
 
 	// Create keystore
 	const prefix = "keys"
-	ks := KeystoreFromDatastore(ds, prefix)
+	ks := KeystoreFromDatastore(NewNamespacedDatastore(ds, datastore.NewKey(prefix)))
 
 	// Put keys
 	for id, val := range keys {

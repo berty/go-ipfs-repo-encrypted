@@ -8,19 +8,18 @@ import (
 )
 
 type dsks struct {
-	ds        datastore.Datastore
-	namespace string
+	ds datastore.Datastore
 }
 
 var _ keystore.Keystore = (*dsks)(nil)
 
-func KeystoreFromDatastore(ds datastore.Datastore, namespace string) keystore.Keystore {
-	return &dsks{ds, namespace}
+func KeystoreFromDatastore(ds datastore.Datastore) keystore.Keystore {
+	return &dsks{ds}
 }
 
 // Has returns whether or not a key exists in the Keystore
 func (ks *dsks) Has(id string) (bool, error) {
-	return ks.ds.Has(ks.keyFromString(id))
+	return ks.ds.Has(datastore.NewKey(id))
 }
 
 // Put stores a key in the Keystore, if a key with the same name already exists, returns ErrKeyExists
@@ -30,7 +29,7 @@ func (ks *dsks) Put(id string, val ci.PrivKey) error {
 		return err
 	}
 
-	key := ks.keyFromString(id)
+	key := datastore.NewKey(id)
 
 	has, err := ks.ds.Has(key)
 	if err != nil {
@@ -47,7 +46,7 @@ func (ks *dsks) Put(id string, val ci.PrivKey) error {
 // Get retrieves a key from the Keystore if it exists, and returns ErrNoSuchKey
 // otherwise.
 func (ks *dsks) Get(id string) (ci.PrivKey, error) {
-	valBytes, err := ks.ds.Get(ks.keyFromString(id))
+	valBytes, err := ks.ds.Get(datastore.NewKey(id))
 	if err != nil {
 		if err == datastore.ErrNotFound {
 			return nil, keystore.ErrNoSuchKey
@@ -59,12 +58,12 @@ func (ks *dsks) Get(id string) (ci.PrivKey, error) {
 
 // Delete removes a key from the Keystore
 func (ks *dsks) Delete(id string) error {
-	return ks.ds.Delete(ks.keyFromString(id))
+	return ks.ds.Delete(datastore.NewKey(id))
 }
 
 // List returns a list of key identifier
 func (ks *dsks) List() ([]string, error) {
-	res, err := ks.ds.Query(query.Query{Prefix: ks.namespace, KeysOnly: true})
+	res, err := ks.ds.Query(query.Query{KeysOnly: true})
 	if err != nil {
 		return nil, err
 	}
@@ -77,8 +76,4 @@ func (ks *dsks) List() ([]string, error) {
 		l[i] = e.Key
 	}
 	return l, nil
-}
-
-func (ks *dsks) keyFromString(id string) datastore.Key {
-	return datastore.KeyWithNamespaces([]string{ks.namespace, id})
 }

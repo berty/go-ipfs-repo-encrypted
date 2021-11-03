@@ -71,13 +71,16 @@ func (r *encRepo) setConfig(updated *config.Config) error {
 
 	// Do not use `*r.config = ...`. This will modify the *shared* config
 	// returned by `r.Config`.
-	if r.config, err = config.FromMap(mapconf); err != nil {
+	conf, err := config.FromMap(mapconf)
+	if err != nil {
 		return err
 	}
 
-	if err := writeConfigToDatastore(r.root, mapconf); err != nil {
+	if err := writeConfigToDatastore(r.root, conf); err != nil {
 		return err
 	}
+
+	r.config = conf
 
 	return nil
 }

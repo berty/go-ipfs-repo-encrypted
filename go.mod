@@ -3,7 +3,7 @@ module berty.tech/go-ipfs-repo-encrypted
 go 1.16
 
 require (
-	github.com/ipfs/go-datastore v0.4.6
+	github.com/ipfs/go-datastore v0.5.0
 	github.com/ipfs/go-ds-sql v0.2.0
 	github.com/ipfs/go-filestore v0.0.3
 	github.com/ipfs/go-ipfs v0.10.0

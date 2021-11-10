@@ -1,6 +1,7 @@
 package encrepo
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/ipfs/go-datastore"
@@ -10,31 +11,31 @@ import (
 
 const configKey = "config"
 
-func isConfigInitialized(ds datastore.Datastore) bool {
-	has, err := ds.Has(datastore.NewKey(configKey))
+func isConfigInitialized(ctx context.Context, ds datastore.Datastore) bool {
+	has, err := ds.Has(ctx, datastore.NewKey(configKey))
 	if err != nil {
 		return false
 	}
 	return has
 }
 
-func initConfig(ds datastore.Datastore, conf *config.Config) error {
-	if isConfigInitialized(ds) {
+func initConfig(ctx context.Context, ds datastore.Datastore, conf *config.Config) error {
+	if isConfigInitialized(ctx, ds) {
 		return nil
 	}
 
 	// initialization is the one time when it's okay to write to the config
 	// without reading the config from disk and merging any user-provided keys
 	// that may exist.
-	if err := writeConfigToDatastore(ds, conf); err != nil {
+	if err := writeConfigToDatastore(ctx, ds, conf); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func readConfigFromDatastore(ds datastore.Datastore, dest interface{}) error {
-	confBytes, err := ds.Get(datastore.NewKey(configKey))
+func readConfigFromDatastore(ctx context.Context, ds datastore.Datastore, dest interface{}) error {
+	confBytes, err := ds.Get(ctx, datastore.NewKey(configKey))
 	switch err {
 	case nil:
 		if err := json.Unmarshal(confBytes, dest); err != nil {
@@ -48,20 +49,20 @@ func readConfigFromDatastore(ds datastore.Datastore, dest interface{}) error {
 	}
 }
 
-func writeConfigToDatastore(ds datastore.Datastore, src interface{}) error {
+func writeConfigToDatastore(ctx context.Context, ds datastore.Datastore, src interface{}) error {
 	confBytes, err := config.Marshal(src)
 	if err != nil {
 		return errors.Wrap(err, "marshal config")
 	}
-	if err := ds.Put(datastore.NewKey(configKey), confBytes); err != nil {
+	if err := ds.Put(ctx, datastore.NewKey(configKey), confBytes); err != nil {
 		return errors.Wrap(err, "put config in ds")
 	}
 	return nil
 }
 
-func getConfigFromDatastore(ds datastore.Datastore) (*config.Config, error) {
+func getConfigFromDatastore(ctx context.Context, ds datastore.Datastore) (*config.Config, error) {
 	var conf config.Config
-	err := readConfigFromDatastore(ds, &conf)
+	err := readConfigFromDatastore(ctx, ds, &conf)
 	switch err {
 	case nil:
 		return &conf, nil

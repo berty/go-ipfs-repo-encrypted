@@ -1,6 +1,7 @@
 package encrepo
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
@@ -70,12 +71,15 @@ func TestGetSize(t *testing.T) {
 	require.NoError(t, err)
 	defer requireClose(t, ds)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	buf := []byte("42\x0042")
 	key := datastore.NewKey("key")
-	err = ds.Put(key, buf)
+	err = ds.Put(ctx, key, buf)
 	require.NoError(t, err)
 
-	sz, err := ds.GetSize(key)
+	sz, err := ds.GetSize(ctx, key)
 	require.NoError(t, err)
 
 	require.Equal(t, len(buf), sz)

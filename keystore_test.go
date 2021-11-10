@@ -1,6 +1,7 @@
 package encrepo
 
 import (
+	"context"
 	secrand "crypto/rand"
 	"io"
 	"path/filepath"
@@ -32,9 +33,12 @@ func TestKeystoreFromSQLiteDatastore(t *testing.T) {
 		keys[id] = sk
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// Create keystore
 	const prefix = "keys"
-	ks := KeystoreFromDatastore(NewNamespacedDatastore(ds, datastore.NewKey(prefix)))
+	ks := KeystoreFromDatastore(ctx, NewNamespacedDatastore(ds, datastore.NewKey(prefix)))
 
 	// Put keys
 	for id, val := range keys {
@@ -42,7 +46,7 @@ func TestKeystoreFromSQLiteDatastore(t *testing.T) {
 	}
 
 	// Put data with same prefix in ds
-	require.NoError(t, ds.Put(datastore.NewKey(prefix+"_foo"), []byte("42")))
+	require.NoError(t, ds.Put(ctx, datastore.NewKey(prefix+"_foo"), []byte("42")))
 
 	// Check that the key list contains the correct keys and not the data with same prefix
 	l, err := ks.List()

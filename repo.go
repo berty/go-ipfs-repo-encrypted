@@ -1,6 +1,7 @@
 package encrepo
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ipfs/go-datastore"
@@ -19,6 +20,8 @@ type encRepo struct {
 	ks     keystore.Keystore
 	config *config.Config
 	closed bool
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 var _ repo.Repo = (*encRepo)(nil)
@@ -58,7 +61,7 @@ func (r *encRepo) setConfig(updated *config.Config) error {
 	// as a map, write the updated struct values to the map and write the map
 	// to disk.
 	var mapconf map[string]interface{}
-	if err := readConfigFromDatastore(r.root, &mapconf); err != nil {
+	if err := readConfigFromDatastore(r.ctx, r.root, &mapconf); err != nil {
 		return err
 	}
 	m, err := config.ToMap(updated)
@@ -76,7 +79,7 @@ func (r *encRepo) setConfig(updated *config.Config) error {
 		return err
 	}
 
-	if err := writeConfigToDatastore(r.root, conf); err != nil {
+	if err := writeConfigToDatastore(r.ctx, r.root, conf); err != nil {
 		return err
 	}
 
@@ -96,7 +99,7 @@ func (r *encRepo) SetConfigKey(key string, value interface{}) error {
 
 	// Load into a map so we don't end up writing any additional defaults to the config file.
 	var mapconf map[string]interface{}
-	if err := readConfigFromDatastore(r.root, &mapconf); err != nil {
+	if err := readConfigFromDatastore(r.ctx, r.root, &mapconf); err != nil {
 		return err
 	}
 	// Load private key to guard against it being overwritten.
@@ -138,7 +141,7 @@ func (r *encRepo) GetConfigKey(key string) (interface{}, error) {
 	}
 
 	var cfg map[string]interface{}
-	if err := readConfigFromDatastore(r.root, &cfg); err != nil {
+	if err := readConfigFromDatastore(r.ctx, r.root, &cfg); err != nil {
 		return nil, err
 	}
 	return common.MapGetKV(cfg, key)
@@ -151,7 +154,7 @@ func (r *encRepo) Datastore() repo.Datastore {
 
 // GetStorageUsage returns the number of bytes stored.
 func (r *encRepo) GetStorageUsage() (uint64, error) {
-	return datastore.DiskUsage(r.Datastore())
+	return datastore.DiskUsage(r.ctx, r.Datastore())
 }
 
 // Keystore returns a reference to the key management interface.
@@ -174,7 +177,7 @@ func (r *encRepo) SetAPIAddr(addr ma.Multiaddr) error {
 		return errors.Wrap(err, "marshal ma")
 	}
 	key := datastore.NewKey("api")
-	if err := r.root.Put(key, bytes); err != nil {
+	if err := r.root.Put(r.ctx, key, bytes); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("put '%s' in ds", key))
 	}
 	return nil
@@ -182,7 +185,7 @@ func (r *encRepo) SetAPIAddr(addr ma.Multiaddr) error {
 
 // SwarmKey returns the configured shared symmetric key for the private networks feature.
 func (r *encRepo) SwarmKey() ([]byte, error) {
-	swarmKey, err := r.root.Get(datastore.NewKey("swarm.key"))
+	swarmKey, err := r.root.Get(r.ctx, datastore.NewKey("swarm.key"))
 	switch err {
 	case nil:
 		return swarmKey, nil
@@ -203,5 +206,9 @@ func (r *encRepo) Close() error {
 
 	r.closed = true
 
-	return r.root.Close()
+	err := r.root.Close()
+
+	r.cancel()
+
+	return err
 }

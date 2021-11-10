@@ -4,6 +4,7 @@ import (
 	sync_ds "github.com/ipfs/go-datastore/sync"
 	config "github.com/ipfs/go-ipfs-config"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 )
 
 const tableName = "ipfs"
@@ -14,12 +15,15 @@ func IsInitialized(dbPath string, key []byte) (bool, error) {
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
-	return isInitialized(dbPath, key)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	return isInitialized(ctx, dbPath, key)
 }
 
 // isInitialized reports whether the repo is initialized. Caller must
 // hold the packageLock.
-func isInitialized(dbPath string, key []byte) (bool, error) {
+func isInitialized(ctx context.Context, dbPath string, key []byte) (bool, error) {
 	uds, err := OpenSQLCipherDatastore("sqlite3", dbPath, tableName, key)
 	if err == ErrDatabaseNotFound {
 		return false, nil
@@ -30,7 +34,7 @@ func isInitialized(dbPath string, key []byte) (bool, error) {
 
 	ds := sync_ds.MutexWrap(uds)
 
-	initialized := isConfigInitialized(ds)
+	initialized := isConfigInitialized(ctx, ds)
 
 	if err := uds.Close(); err != nil {
 		return false, err
@@ -45,7 +49,10 @@ func Init(dbPath string, key []byte, conf *config.Config) error {
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
-	isInit, err := isInitialized(dbPath, key)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	isInit, err := isInitialized(ctx, dbPath, key)
 	if err != nil {
 		return err
 	}
@@ -60,7 +67,7 @@ func Init(dbPath string, key []byte, conf *config.Config) error {
 
 	ds := sync_ds.MutexWrap(uds)
 
-	if err := initConfig(ds, conf); err != nil {
+	if err := initConfig(ctx, ds, conf); err != nil {
 		return err
 	}
 

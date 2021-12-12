@@ -34,7 +34,7 @@ func NewQueries(tbl string) Queries {
 		getQuery:     fmt.Sprintf("SELECT data FROM %s WHERE key = $1", tbl),
 		putQuery:     fmt.Sprintf("INSERT OR REPLACE INTO %s(key, data) VALUES($1, $2)", tbl),
 		queryQuery:   fmt.Sprintf("SELECT key, data FROM %s", tbl),
-		prefixQuery:  ` WHERE key LIKE '%s%%' ORDER BY key`,
+		prefixQuery:  ` WHERE key GLOB '%s*' ORDER BY key`,
 		limitQuery:   ` LIMIT %d`,
 		offsetQuery:  ` OFFSET %d`,
 		getSizeQuery: fmt.Sprintf("SELECT length(data) FROM %s WHERE key = $1", tbl),

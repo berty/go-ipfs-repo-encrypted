@@ -1,6 +1,7 @@
 package encrepo
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/ipfs/go-datastore"
@@ -11,7 +12,7 @@ import (
 const configKey = "config"
 
 func isConfigInitialized(ds datastore.Datastore) bool {
-	has, err := ds.Has(datastore.NewKey(configKey))
+	has, err := ds.Has(context.Background(), datastore.NewKey(configKey))
 	if err != nil {
 		return false
 	}
@@ -34,7 +35,7 @@ func initConfig(ds datastore.Datastore, conf *config.Config) error {
 }
 
 func readConfigFromDatastore(ds datastore.Datastore, dest interface{}) error {
-	confBytes, err := ds.Get(datastore.NewKey(configKey))
+	confBytes, err := ds.Get(context.Background(), datastore.NewKey(configKey))
 	switch err {
 	case nil:
 		if err := json.Unmarshal(confBytes, dest); err != nil {
@@ -53,7 +54,7 @@ func writeConfigToDatastore(ds datastore.Datastore, src interface{}) error {
 	if err != nil {
 		return errors.Wrap(err, "marshal config")
 	}
-	if err := ds.Put(datastore.NewKey(configKey), confBytes); err != nil {
+	if err := ds.Put(context.Background(), datastore.NewKey(configKey), confBytes); err != nil {
 		return errors.Wrap(err, "put config in ds")
 	}
 	return nil

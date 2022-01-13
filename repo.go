@@ -1,6 +1,7 @@
 package encrepo
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ipfs/go-datastore"
@@ -150,8 +151,8 @@ func (r *encRepo) Datastore() repo.Datastore {
 }
 
 // GetStorageUsage returns the number of bytes stored.
-func (r *encRepo) GetStorageUsage() (uint64, error) {
-	return datastore.DiskUsage(r.Datastore())
+func (r *encRepo) GetStorageUsage(ctx context.Context) (uint64, error) {
+	return datastore.DiskUsage(ctx, r.Datastore())
 }
 
 // Keystore returns a reference to the key management interface.
@@ -174,7 +175,7 @@ func (r *encRepo) SetAPIAddr(addr ma.Multiaddr) error {
 		return errors.Wrap(err, "marshal ma")
 	}
 	key := datastore.NewKey("api")
-	if err := r.root.Put(key, bytes); err != nil {
+	if err := r.root.Put(context.Background(), key, bytes); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("put '%s' in ds", key))
 	}
 	return nil
@@ -182,7 +183,7 @@ func (r *encRepo) SetAPIAddr(addr ma.Multiaddr) error {
 
 // SwarmKey returns the configured shared symmetric key for the private networks feature.
 func (r *encRepo) SwarmKey() ([]byte, error) {
-	swarmKey, err := r.root.Get(datastore.NewKey("swarm.key"))
+	swarmKey, err := r.root.Get(context.Background(), datastore.NewKey("swarm.key"))
 	switch err {
 	case nil:
 		return swarmKey, nil

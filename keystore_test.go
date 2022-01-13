@@ -1,6 +1,7 @@
 package encrepo
 
 import (
+	"context"
 	secrand "crypto/rand"
 	"io"
 	"path/filepath"
@@ -18,6 +19,9 @@ func requireClose(t *testing.T, closer io.Closer) {
 }
 
 func TestKeystoreFromSQLiteDatastore(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// Instantiate datastore
 	ds, err := NewSQLiteDatastore("sqlite3", filepath.Join(t.TempDir(), "db.sqlite"), "keys")
 	require.NoError(t, err)
@@ -42,7 +46,7 @@ func TestKeystoreFromSQLiteDatastore(t *testing.T) {
 	}
 
 	// Put data with same prefix in ds
-	require.NoError(t, ds.Put(datastore.NewKey(prefix+"_foo"), []byte("42")))
+	require.NoError(t, ds.Put(ctx, datastore.NewKey(prefix+"_foo"), []byte("42")))
 
 	// Check that the key list contains the correct keys and not the data with same prefix
 	l, err := ks.List()

@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/ipfs/go-datastore v0.5.1
-	github.com/ipfs/go-ds-sql v0.2.0
+	github.com/ipfs/go-ds-sql v0.2.1-0.20220105185613-ab0fda210af1
 	github.com/ipfs/go-filestore v1.1.0
 	github.com/ipfs/go-ipfs v0.11.0
 	github.com/ipfs/go-ipfs-config v0.18.0

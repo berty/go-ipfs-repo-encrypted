@@ -1,6 +1,7 @@
 package encrepo
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
@@ -65,6 +66,9 @@ func TestNewSQLiteDatastoreTwice(t *testing.T) {
 }
 
 func TestGetSize(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	dbPath := filepath.Join(t.TempDir(), "db.sqlite")
 	ds, err := NewSQLiteDatastore("sqlite3", dbPath, "data")
 	require.NoError(t, err)
@@ -72,10 +76,10 @@ func TestGetSize(t *testing.T) {
 
 	buf := []byte("42\x0042")
 	key := datastore.NewKey("key")
-	err = ds.Put(key, buf)
+	err = ds.Put(ctx, key, buf)
 	require.NoError(t, err)
 
-	sz, err := ds.GetSize(key)
+	sz, err := ds.GetSize(ctx, key)
 	require.NoError(t, err)
 
 	require.Equal(t, len(buf), sz)

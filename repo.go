@@ -50,16 +50,19 @@ func (r *encRepo) SetConfig(updated *config.Config) error {
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
-	return r.setConfig(updated)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	return r.setConfig(ctx, updated)
 }
 
 // SetConfig persists the given configuration struct to storage.
-func (r *encRepo) setConfig(updated *config.Config) error {
+func (r *encRepo) setConfig(ctx context.Context, updated *config.Config) error {
 	// to avoid clobbering user-provided keys, must read the config from disk
 	// as a map, write the updated struct values to the map and write the map
 	// to disk.
 	var mapconf map[string]interface{}
-	if err := readConfigFromDatastore(r.root, &mapconf); err != nil {
+	if err := readConfigFromDatastore(ctx, r.root, &mapconf); err != nil {
 		return err
 	}
 	m, err := config.ToMap(updated)
@@ -77,7 +80,7 @@ func (r *encRepo) setConfig(updated *config.Config) error {
 		return err
 	}
 
-	if err := writeConfigToDatastore(r.root, conf); err != nil {
+	if err := writeConfigToDatastore(ctx, r.root, conf); err != nil {
 		return err
 	}
 
@@ -95,9 +98,12 @@ func (r *encRepo) SetConfigKey(key string, value interface{}) error {
 		return errors.New("repo is closed")
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// Load into a map so we don't end up writing any additional defaults to the config file.
 	var mapconf map[string]interface{}
-	if err := readConfigFromDatastore(r.root, &mapconf); err != nil {
+	if err := readConfigFromDatastore(ctx, r.root, &mapconf); err != nil {
 		return err
 	}
 	// Load private key to guard against it being overwritten.
@@ -126,7 +132,7 @@ func (r *encRepo) SetConfigKey(key string, value interface{}) error {
 	}
 
 	// Write config
-	return r.setConfig(conf)
+	return r.setConfig(ctx, conf)
 }
 
 // GetConfigKey reads the value for the given key from the configuration in storage.
@@ -138,8 +144,11 @@ func (r *encRepo) GetConfigKey(key string) (interface{}, error) {
 		return nil, errors.New("repo is closed")
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	var cfg map[string]interface{}
-	if err := readConfigFromDatastore(r.root, &cfg); err != nil {
+	if err := readConfigFromDatastore(ctx, r.root, &cfg); err != nil {
 		return nil, err
 	}
 	return common.MapGetKV(cfg, key)
@@ -170,12 +179,15 @@ func (r *encRepo) SetAPIAddr(addr ma.Multiaddr) error {
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	bytes, err := addr.MarshalBinary()
 	if err != nil {
 		return errors.Wrap(err, "marshal ma")
 	}
 	key := datastore.NewKey("api")
-	if err := r.root.Put(context.Background(), key, bytes); err != nil {
+	if err := r.root.Put(ctx, key, bytes); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("put '%s' in ds", key))
 	}
 	return nil
@@ -183,7 +195,9 @@ func (r *encRepo) SetAPIAddr(addr ma.Multiaddr) error {
 
 // SwarmKey returns the configured shared symmetric key for the private networks feature.
 func (r *encRepo) SwarmKey() ([]byte, error) {
-	swarmKey, err := r.root.Get(context.Background(), datastore.NewKey("swarm.key"))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	swarmKey, err := r.root.Get(ctx, datastore.NewKey("swarm.key"))
 	switch err {
 	case nil:
 		return swarmKey, nil

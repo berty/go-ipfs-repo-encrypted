@@ -1,6 +1,8 @@
 package encrepo
 
 import (
+	"context"
+
 	"github.com/ipfs/go-datastore"
 	sync_ds "github.com/ipfs/go-datastore/sync"
 	"github.com/ipfs/go-ipfs/repo"
@@ -13,12 +15,14 @@ var (
 
 func Open(dbPath string, key []byte) (repo.Repo, error) {
 	fn := func() (repo.Repo, error) {
-		return open(dbPath, key)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		return open(ctx, dbPath, key)
 	}
 	return onlyOne.Open(dbPath, fn)
 }
 
-func open(dbPath string, key []byte) (repo.Repo, error) {
+func open(ctx context.Context, dbPath string, key []byte) (repo.Repo, error) {
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
@@ -29,7 +33,7 @@ func open(dbPath string, key []byte) (repo.Repo, error) {
 
 	root := sync_ds.MutexWrap(uroot)
 
-	conf, err := getConfigFromDatastore(root)
+	conf, err := getConfigFromDatastore(ctx, root)
 	if err != nil {
 		return nil, errors.Wrap(err, "get config")
 	}

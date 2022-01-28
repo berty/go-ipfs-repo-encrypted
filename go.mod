@@ -7,7 +7,7 @@ require (
 	github.com/ipfs/go-ds-sql v0.2.1-0.20220105185613-ab0fda210af1
 	github.com/ipfs/go-filestore v1.1.0
 	github.com/ipfs/go-ipfs v0.11.0
-	github.com/ipfs/go-ipfs-config v0.18.0
+	github.com/ipfs/go-ipfs-config v0.19.0
 	github.com/ipfs/go-ipfs-keystore v0.0.2
 	github.com/jimsmart/schema v0.2.0
 	github.com/libp2p/go-libp2p-core v0.14.0

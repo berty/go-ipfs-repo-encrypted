@@ -21,7 +21,9 @@ func KeystoreFromDatastore(ds datastore.Datastore) keystore.Keystore {
 
 // Has returns whether or not a key exists in the Keystore
 func (ks *dsks) Has(id string) (bool, error) {
-	return ks.ds.Has(context.TODO(), datastore.NewKey(id))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	return ks.ds.Has(ctx, datastore.NewKey(id))
 }
 
 // Put stores a key in the Keystore, if a key with the same name already exists, returns ErrKeyExists
@@ -33,7 +35,10 @@ func (ks *dsks) Put(id string, val ci.PrivKey) error {
 
 	key := datastore.NewKey(id)
 
-	has, err := ks.ds.Has(context.TODO(), key)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	has, err := ks.ds.Has(ctx, key)
 	if err != nil {
 		return err
 	}
@@ -42,13 +47,16 @@ func (ks *dsks) Put(id string, val ci.PrivKey) error {
 		return keystore.ErrKeyExists
 	}
 
-	return ks.ds.Put(context.TODO(), key, valBytes)
+	return ks.ds.Put(ctx, key, valBytes)
 }
 
 // Get retrieves a key from the Keystore if it exists, and returns ErrNoSuchKey
 // otherwise.
 func (ks *dsks) Get(id string) (ci.PrivKey, error) {
-	valBytes, err := ks.ds.Get(context.TODO(), datastore.NewKey(id))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	valBytes, err := ks.ds.Get(ctx, datastore.NewKey(id))
 	if err != nil {
 		if err == datastore.ErrNotFound {
 			return nil, keystore.ErrNoSuchKey
@@ -60,12 +68,16 @@ func (ks *dsks) Get(id string) (ci.PrivKey, error) {
 
 // Delete removes a key from the Keystore
 func (ks *dsks) Delete(id string) error {
-	return ks.ds.Delete(context.TODO(), datastore.NewKey(id))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	return ks.ds.Delete(ctx, datastore.NewKey(id))
 }
 
 // List returns a list of key identifier
 func (ks *dsks) List() ([]string, error) {
-	res, err := ks.ds.Query(context.TODO(), query.Query{KeysOnly: true})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	res, err := ks.ds.Query(ctx, query.Query{KeysOnly: true})
 	if err != nil {
 		return nil, err
 	}

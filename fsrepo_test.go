@@ -35,8 +35,9 @@ func TestInitIdempotence(t *testing.T) {
 	t.Parallel()
 	path := testRepoPath("", t)
 	key := testingKey(t)
+	salt := testingSalt(t)
 	for i := 0; i < 10; i++ {
-		require.NoError(t, Init(path, key, &config.Config{Datastore: testingDatastoreConfig()}), i)
+		require.NoError(t, Init(path, key, salt, &config.Config{Datastore: testingDatastoreConfig()}), i)
 	}
 }
 
@@ -53,6 +54,14 @@ func testingKey(t *testing.T) []byte {
 	return buf
 }
 
+func testingSalt(t *testing.T) []byte {
+	t.Helper()
+	buf := make([]byte, 32)
+	_, err := rand.Read(buf)
+	require.NoError(t, err)
+	return buf
+}
+
 func TestCanManageReposIndependently(t *testing.T) {
 	t.Parallel()
 	pathA := testRepoPath("a", t)
@@ -61,22 +70,25 @@ func TestCanManageReposIndependently(t *testing.T) {
 	aKey := testingKey(t)
 	bKey := testingKey(t)
 
+	aSalt := testingSalt(t)
+	bSalt := testingSalt(t)
+
 	t.Log("initialize two repos")
-	assert.Nil(Init(pathA, aKey, &config.Config{Datastore: testingDatastoreConfig()}), t, "a", "should initialize successfully")
-	assert.Nil(Init(pathB, bKey, &config.Config{Datastore: testingDatastoreConfig()}), t, "b", "should initialize successfully")
+	assert.Nil(Init(pathA, aKey, aSalt, &config.Config{Datastore: testingDatastoreConfig()}), t, "a", "should initialize successfully")
+	assert.Nil(Init(pathB, bKey, bSalt, &config.Config{Datastore: testingDatastoreConfig()}), t, "b", "should initialize successfully")
 
 	t.Log("ensure repos initialized")
-	isInit, err := IsInitialized(pathA, aKey)
+	isInit, err := IsInitialized(pathA, aKey, aSalt)
 	require.NoError(t, err)
 	require.True(t, isInit, "a should be initialized")
-	isInit, err = IsInitialized(pathB, bKey)
+	isInit, err = IsInitialized(pathB, bKey, bSalt)
 	require.NoError(t, err)
 	require.True(t, isInit, "b should be initialized")
 
 	t.Log("open the two repos")
-	repoA, err := Open(pathA, aKey)
+	repoA, err := Open(pathA, aKey, aSalt)
 	assert.Nil(err, t, "a")
-	repoB, err := Open(pathB, bKey)
+	repoB, err := Open(pathB, bKey, bSalt)
 	assert.Nil(err, t, "b")
 
 	t.Log("close and remove b while a is open")
@@ -96,11 +108,12 @@ func TestDatastoreGetNotAllowedAfterClose(t *testing.T) {
 	path := testRepoPath("test", t)
 
 	key := testingKey(t)
-	isInit, err := IsInitialized(path, key)
+	salt := testingSalt(t)
+	isInit, err := IsInitialized(path, key, salt)
 	require.NoError(t, err)
 	require.False(t, isInit)
-	require.NoError(t, Init(path, key, &config.Config{Datastore: testingDatastoreConfig()}))
-	r, err := Open(path, key)
+	require.NoError(t, Init(path, key, salt, &config.Config{Datastore: testingDatastoreConfig()}))
+	r, err := Open(path, key, salt)
 	require.NoError(t, err)
 
 	k := "key"
@@ -119,9 +132,10 @@ func TestDatastorePersistsFromRepoToRepo(t *testing.T) {
 
 	path := testRepoPath("test", t)
 	key := testingKey(t)
+	salt := testingSalt(t)
 
-	assert.Nil(Init(path, key, &config.Config{Datastore: testingDatastoreConfig()}), t)
-	r1, err := Open(path, key)
+	assert.Nil(Init(path, key, salt, &config.Config{Datastore: testingDatastoreConfig()}), t)
+	r1, err := Open(path, key, salt)
 	assert.Nil(err, t)
 
 	k := "key"
@@ -129,7 +143,7 @@ func TestDatastorePersistsFromRepoToRepo(t *testing.T) {
 	assert.Nil(r1.Datastore().Put(ctx, datastore.NewKey(k), expected), t, "using first repo, Put should be successful")
 	assert.Nil(r1.Close(), t)
 
-	r2, err := Open(path, key)
+	r2, err := Open(path, key, salt)
 	assert.Nil(err, t)
 	actual, err := r2.Datastore().Get(ctx, datastore.NewKey(k))
 	assert.Nil(err, t, "using second repo, Get should be successful")
@@ -142,12 +156,13 @@ func TestOpenMoreThanOnceInSameProcess(t *testing.T) {
 	path := testRepoPath("", t)
 
 	key := testingKey(t)
+	salt := testingSalt(t)
 
-	assert.Nil(Init(path, key, &config.Config{Datastore: testingDatastoreConfig()}), t)
+	assert.Nil(Init(path, key, salt, &config.Config{Datastore: testingDatastoreConfig()}), t)
 
-	r1, err := Open(path, key)
+	r1, err := Open(path, key, salt)
 	assert.Nil(err, t, "first repo should open successfully")
-	r2, err := Open(path, key)
+	r2, err := Open(path, key, salt)
 	assert.Nil(err, t, "second repo should open successfully")
 	assert.True(r1 == r2, t, "second open returns same value")
 

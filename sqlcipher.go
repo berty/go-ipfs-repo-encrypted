@@ -1,6 +1,7 @@
 package encrepo
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 
@@ -14,18 +15,23 @@ func NewSQLiteDatastore(driver, dbPath, table string) (*sqlds.Datastore, error) 
 	return (&sqliteds.Options{Driver: driver, DSN: dbPath, Table: table}).Create()
 }
 
-func NewSQLCipherDatastore(driver, dbPath, table string, key []byte) (*sqlds.Datastore, error) {
+func NewSQLCipherDatastore(driver, dbPath, table string, key []byte, salt []byte) (*sqlds.Datastore, error) {
 	if err := checkDBCrypto(dbPath, len(key) != 0); err != nil {
 		return nil, err
 	}
+
+	saltString := base64.URLEncoding.EncodeToString(salt)
+	dbPath = fmt.Sprintf("%s?journal_mode=WAL&cipher_plaintext_header_size=32&cipher_salt=%s", dbPath, saltString)
+
 	return (&sqliteds.Options{Driver: driver, DSN: dbPath, Table: table, Key: key}).Create()
 }
 
-func OpenSQLCipherDatastore(driver, dbPath, table string, key []byte) (*sqlds.Datastore, error) {
+func OpenSQLCipherDatastore(driver, dbPath, table string, key []byte, salt []byte) (*sqlds.Datastore, error) {
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 		return nil, ErrDatabaseNotFound
 	}
-	return NewSQLCipherDatastore(driver, dbPath, table, key)
+
+	return NewSQLCipherDatastore(driver, dbPath, table, key, salt)
 }
 
 var (

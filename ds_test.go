@@ -15,7 +15,8 @@ func TestCase(t *testing.T) {
 	defer cancel()
 
 	key := testingKey(t)
-	ds, err := NewSQLCipherDatastore("sqlite3", filepath.Join(t.TempDir(), "test.sqlite"), "blocks", key)
+	salt := testingSalt(t)
+	ds, err := NewSQLCipherDatastore("sqlite3", filepath.Join(t.TempDir(), "test.sqlite"), "blocks", key, salt)
 	require.NoError(t, err)
 	require.NoError(t, ds.Put(ctx, datastore.KeyWithNamespaces([]string{"A", "B"}), ([]byte)("42")))
 	qr, err := ds.Query(ctx, query.Query{Prefix: "a"})

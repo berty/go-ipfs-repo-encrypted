@@ -13,20 +13,20 @@ var (
 	onlyOne repo.OnlyOne
 )
 
-func Open(dbPath string, key []byte) (repo.Repo, error) {
+func Open(dbPath string, key []byte, salt []byte) (repo.Repo, error) {
 	fn := func() (repo.Repo, error) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		return open(ctx, dbPath, key)
+		return open(ctx, dbPath, key, salt)
 	}
 	return onlyOne.Open(dbPath, fn)
 }
 
-func open(ctx context.Context, dbPath string, key []byte) (repo.Repo, error) {
+func open(ctx context.Context, dbPath string, key []byte, salt []byte) (repo.Repo, error) {
 	packageLock.Lock()
 	defer packageLock.Unlock()
 
-	uroot, err := OpenSQLCipherDatastore("sqlite3", dbPath, tableName, key)
+	uroot, err := OpenSQLCipherDatastore("sqlite3", dbPath, tableName, key, salt)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiate datastore")
 	}

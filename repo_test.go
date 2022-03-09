@@ -13,23 +13,24 @@ import (
 
 func TestRepo(t *testing.T) {
 	key := testingKey(t)
+	salt := testingSalt(t)
 	dbPath := filepath.Join(t.TempDir(), "db.sqlite")
 
-	isInit, err := IsInitialized(dbPath, key)
+	isInit, err := IsInitialized(dbPath, key, salt)
 	require.NoError(t, err)
 	require.False(t, isInit)
 
-	err = Init(dbPath, key, &config.Config{})
+	err = Init(dbPath, key, salt, &config.Config{})
 	require.NoError(t, err)
 
-	isInit, err = IsInitialized(dbPath, key)
+	isInit, err = IsInitialized(dbPath, key, salt)
 	require.NoError(t, err)
 	require.True(t, isInit)
 
-	err = Init(dbPath, key, &config.Config{})
+	err = Init(dbPath, key, salt, &config.Config{})
 	require.NoError(t, err)
 
-	r, err := Open(dbPath, key)
+	r, err := Open(dbPath, key, salt)
 	require.NoError(t, err)
 	defer requireClose(t, r)
 
@@ -42,12 +43,13 @@ func TestRepo(t *testing.T) {
 
 func TestSetAPIAddrTwice(t *testing.T) {
 	key := testingKey(t)
+	salt := testingSalt(t)
 	dbPath := filepath.Join(t.TempDir(), "db.sqlite")
 
-	err := Init(dbPath, key, &config.Config{})
+	err := Init(dbPath, key, salt, &config.Config{})
 	require.NoError(t, err)
 
-	r, err := Open(dbPath, key)
+	r, err := Open(dbPath, key, salt)
 	require.NoError(t, err)
 	defer requireClose(t, r)
 

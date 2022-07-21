@@ -5,7 +5,7 @@ import (
 
 	"github.com/ipfs/go-datastore"
 	sync_ds "github.com/ipfs/go-datastore/sync"
-	"github.com/ipfs/go-ipfs/repo"
+	"github.com/ipfs/kubo/repo"
 	"github.com/pkg/errors"
 )
 

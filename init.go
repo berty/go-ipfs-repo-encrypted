@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sync_ds "github.com/ipfs/go-datastore/sync"
-	config "github.com/ipfs/go-ipfs-config"
+	config "github.com/ipfs/kubo/config"
 	"github.com/pkg/errors"
 )
 

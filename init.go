@@ -10,7 +10,7 @@ import (
 
 const tableName = "ipfs"
 
-func IsInitialized(dbPath string, key []byte, salt []byte) (bool, error) {
+func IsInitialized(dbPath string, key []byte, opts SQLCipherDatastoreOptions) (bool, error) {
 	// packageLock is held to ensure that another caller doesn't attempt to
 	// Init or Remove the repo while this call is in progress.
 	packageLock.Lock()
@@ -19,13 +19,13 @@ func IsInitialized(dbPath string, key []byte, salt []byte) (bool, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	return isInitialized(ctx, dbPath, key, salt)
+	return isInitialized(ctx, dbPath, key, opts)
 }
 
 // isInitialized reports whether the repo is initialized. Caller must
 // hold the packageLock.
-func isInitialized(ctx context.Context, dbPath string, key []byte, salt []byte) (bool, error) {
-	uds, err := OpenSQLCipherDatastore("sqlite3", dbPath, tableName, key, salt)
+func isInitialized(ctx context.Context, dbPath string, key []byte, opts SQLCipherDatastoreOptions) (bool, error) {
+	uds, err := OpenSQLCipherDatastore("sqlite3", dbPath, tableName, key, opts)
 	if err == ErrDatabaseNotFound {
 		return false, nil
 	}
@@ -44,7 +44,7 @@ func isInitialized(ctx context.Context, dbPath string, key []byte, salt []byte) 
 	return initialized, nil
 }
 
-func Init(dbPath string, key []byte, salt []byte, conf *config.Config) error {
+func Init(dbPath string, key []byte, opts SQLCipherDatastoreOptions, conf *config.Config) error {
 	// packageLock must be held to ensure that the repo is not initialized more
 	// than once.
 	packageLock.Lock()
@@ -53,7 +53,7 @@ func Init(dbPath string, key []byte, salt []byte, conf *config.Config) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	isInit, err := isInitialized(ctx, dbPath, key, salt)
+	isInit, err := isInitialized(ctx, dbPath, key, opts)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func Init(dbPath string, key []byte, salt []byte, conf *config.Config) error {
 		return nil
 	}
 
-	uds, err := NewSQLCipherDatastore("sqlite3", dbPath, tableName, key, salt)
+	uds, err := NewSQLCipherDatastore("sqlite3", dbPath, tableName, key, opts)
 	if err != nil {
 		return err
 	}

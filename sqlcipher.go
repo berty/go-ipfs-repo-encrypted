@@ -1,9 +1,10 @@
 package encrepo
 
 import (
-	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"os"
+	"strings"
 
 	sqlds "github.com/ipfs/go-ds-sql"
 	sqliteds "github.com/ipfs/go-ds-sql/sqlite"
@@ -11,27 +12,52 @@ import (
 	"github.com/pkg/errors"
 )
 
+type SQLCipherDatastoreOptions struct {
+	PlaintextHeader bool
+	Salt            []byte
+	JournalMode     string
+}
+
 func NewSQLiteDatastore(driver, dbPath, table string) (*sqlds.Datastore, error) {
 	return (&sqliteds.Options{Driver: driver, DSN: dbPath, Table: table}).Create()
 }
 
-func NewSQLCipherDatastore(driver, dbPath, table string, key []byte, salt []byte) (*sqlds.Datastore, error) {
-	if err := checkDBCrypto(dbPath, len(key) != 0); err != nil {
-		return nil, err
+const saltLength = 16
+
+func NewSQLCipherDatastore(driver, dbPath, table string, key []byte, opts SQLCipherDatastoreOptions) (*sqlds.Datastore, error) {
+	if !opts.PlaintextHeader { // enabling plaintext header breaks encryption detection
+		if err := checkDBCrypto(dbPath, len(key) != 0); err != nil {
+			return nil, err
+		}
 	}
 
-	saltString := base64.URLEncoding.EncodeToString(salt)
-	dbPath = fmt.Sprintf("%s?journal_mode=WAL&cipher_plaintext_header_size=32&cipher_salt=%s", dbPath, saltString)
+	args := []string{}
+	if opts.JournalMode != "" {
+		args = append(args, "_journal_mode="+opts.JournalMode)
+	}
 
-	return (&sqliteds.Options{Driver: driver, DSN: dbPath, Table: table, Key: key}).Create()
+	if opts.PlaintextHeader {
+		if len(opts.Salt) != saltLength {
+			return nil, fmt.Errorf("bad salt, expected %d bytes, got %d", saltLength, len(opts.Salt))
+		}
+		args = append(args, "_pragma_cipher_plaintext_header_size=32")
+		args = append(args, fmt.Sprintf("_pragma_cipher_salt=x'%s'", hex.EncodeToString(opts.Salt)))
+	}
+
+	dsn := dbPath
+	if len(args) != 0 {
+		dsn += "?" + strings.Join(args, "&")
+	}
+
+	return (&sqliteds.Options{Driver: driver, DSN: dsn, Table: table, Key: key}).Create()
 }
 
-func OpenSQLCipherDatastore(driver, dbPath, table string, key []byte, salt []byte) (*sqlds.Datastore, error) {
+func OpenSQLCipherDatastore(driver, dbPath, table string, key []byte, opts SQLCipherDatastoreOptions) (*sqlds.Datastore, error) {
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 		return nil, ErrDatabaseNotFound
 	}
 
-	return NewSQLCipherDatastore(driver, dbPath, table, key, salt)
+	return NewSQLCipherDatastore(driver, dbPath, table, key, opts)
 }
 
 var (

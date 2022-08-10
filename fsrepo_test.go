@@ -36,8 +36,9 @@ func TestInitIdempotence(t *testing.T) {
 	path := testRepoPath("", t)
 	key := testingKey(t)
 	salt := testingSalt(t)
+	opts := SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: salt, JournalMode: "WAL"}
 	for i := 0; i < 10; i++ {
-		require.NoError(t, Init(path, key, salt, &config.Config{Datastore: testingDatastoreConfig()}), i)
+		require.NoError(t, Init(path, key, opts, &config.Config{Datastore: testingDatastoreConfig()}), i)
 	}
 }
 
@@ -56,7 +57,7 @@ func testingKey(t *testing.T) []byte {
 
 func testingSalt(t *testing.T) []byte {
 	t.Helper()
-	buf := make([]byte, 32)
+	buf := make([]byte, saltLength)
 	_, err := rand.Read(buf)
 	require.NoError(t, err)
 	return buf
@@ -73,22 +74,25 @@ func TestCanManageReposIndependently(t *testing.T) {
 	aSalt := testingSalt(t)
 	bSalt := testingSalt(t)
 
+	aOpts := SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: aSalt}
+	bOpts := SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: bSalt}
+
 	t.Log("initialize two repos")
-	assert.Nil(Init(pathA, aKey, aSalt, &config.Config{Datastore: testingDatastoreConfig()}), t, "a", "should initialize successfully")
-	assert.Nil(Init(pathB, bKey, bSalt, &config.Config{Datastore: testingDatastoreConfig()}), t, "b", "should initialize successfully")
+	assert.Nil(Init(pathA, aKey, aOpts, &config.Config{Datastore: testingDatastoreConfig()}), t, "a", "should initialize successfully")
+	assert.Nil(Init(pathB, bKey, bOpts, &config.Config{Datastore: testingDatastoreConfig()}), t, "b", "should initialize successfully")
 
 	t.Log("ensure repos initialized")
-	isInit, err := IsInitialized(pathA, aKey, aSalt)
+	isInit, err := IsInitialized(pathA, aKey, aOpts)
 	require.NoError(t, err)
 	require.True(t, isInit, "a should be initialized")
-	isInit, err = IsInitialized(pathB, bKey, bSalt)
+	isInit, err = IsInitialized(pathB, bKey, bOpts)
 	require.NoError(t, err)
 	require.True(t, isInit, "b should be initialized")
 
 	t.Log("open the two repos")
-	repoA, err := Open(pathA, aKey, aSalt)
+	repoA, err := Open(pathA, aKey, aOpts)
 	assert.Nil(err, t, "a")
-	repoB, err := Open(pathB, bKey, bSalt)
+	repoB, err := Open(pathB, bKey, bOpts)
 	assert.Nil(err, t, "b")
 
 	t.Log("close and remove b while a is open")
@@ -109,11 +113,12 @@ func TestDatastoreGetNotAllowedAfterClose(t *testing.T) {
 
 	key := testingKey(t)
 	salt := testingSalt(t)
-	isInit, err := IsInitialized(path, key, salt)
+	opts := SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: salt, JournalMode: "WAL"}
+	isInit, err := IsInitialized(path, key, opts)
 	require.NoError(t, err)
 	require.False(t, isInit)
-	require.NoError(t, Init(path, key, salt, &config.Config{Datastore: testingDatastoreConfig()}))
-	r, err := Open(path, key, salt)
+	require.NoError(t, Init(path, key, opts, &config.Config{Datastore: testingDatastoreConfig()}))
+	r, err := Open(path, key, opts)
 	require.NoError(t, err)
 
 	k := "key"
@@ -133,9 +138,10 @@ func TestDatastorePersistsFromRepoToRepo(t *testing.T) {
 	path := testRepoPath("test", t)
 	key := testingKey(t)
 	salt := testingSalt(t)
+	opts := SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: salt, JournalMode: "WAL"}
 
-	assert.Nil(Init(path, key, salt, &config.Config{Datastore: testingDatastoreConfig()}), t)
-	r1, err := Open(path, key, salt)
+	assert.Nil(Init(path, key, opts, &config.Config{Datastore: testingDatastoreConfig()}), t)
+	r1, err := Open(path, key, opts)
 	assert.Nil(err, t)
 
 	k := "key"
@@ -143,7 +149,7 @@ func TestDatastorePersistsFromRepoToRepo(t *testing.T) {
 	assert.Nil(r1.Datastore().Put(ctx, datastore.NewKey(k), expected), t, "using first repo, Put should be successful")
 	assert.Nil(r1.Close(), t)
 
-	r2, err := Open(path, key, salt)
+	r2, err := Open(path, key, opts)
 	assert.Nil(err, t)
 	actual, err := r2.Datastore().Get(ctx, datastore.NewKey(k))
 	assert.Nil(err, t, "using second repo, Get should be successful")
@@ -157,12 +163,13 @@ func TestOpenMoreThanOnceInSameProcess(t *testing.T) {
 
 	key := testingKey(t)
 	salt := testingSalt(t)
+	opts := SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: salt, JournalMode: "WAL"}
 
-	assert.Nil(Init(path, key, salt, &config.Config{Datastore: testingDatastoreConfig()}), t)
+	assert.Nil(Init(path, key, opts, &config.Config{Datastore: testingDatastoreConfig()}), t)
 
-	r1, err := Open(path, key, salt)
+	r1, err := Open(path, key, opts)
 	assert.Nil(err, t, "first repo should open successfully")
-	r2, err := Open(path, key, salt)
+	r2, err := Open(path, key, opts)
 	assert.Nil(err, t, "second repo should open successfully")
 	assert.True(r1 == r2, t, "second open returns same value")
 

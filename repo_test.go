@@ -14,23 +14,24 @@ import (
 func TestRepo(t *testing.T) {
 	key := testingKey(t)
 	salt := testingSalt(t)
+	opts := SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: salt, JournalMode: "WAL"}
 	dbPath := filepath.Join(t.TempDir(), "db.sqlite")
 
-	isInit, err := IsInitialized(dbPath, key, salt)
+	isInit, err := IsInitialized(dbPath, key, opts)
 	require.NoError(t, err)
 	require.False(t, isInit)
 
-	err = Init(dbPath, key, salt, &config.Config{})
+	err = Init(dbPath, key, opts, &config.Config{})
 	require.NoError(t, err)
 
-	isInit, err = IsInitialized(dbPath, key, salt)
+	isInit, err = IsInitialized(dbPath, key, opts)
 	require.NoError(t, err)
 	require.True(t, isInit)
 
-	err = Init(dbPath, key, salt, &config.Config{})
+	err = Init(dbPath, key, opts, &config.Config{})
 	require.NoError(t, err)
 
-	r, err := Open(dbPath, key, salt)
+	r, err := Open(dbPath, key, SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: salt, JournalMode: "WAL"})
 	require.NoError(t, err)
 	defer requireClose(t, r)
 
@@ -44,12 +45,13 @@ func TestRepo(t *testing.T) {
 func TestSetAPIAddrTwice(t *testing.T) {
 	key := testingKey(t)
 	salt := testingSalt(t)
+	opts := SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: salt, JournalMode: "WAL"}
 	dbPath := filepath.Join(t.TempDir(), "db.sqlite")
 
-	err := Init(dbPath, key, salt, &config.Config{})
+	err := Init(dbPath, key, opts, &config.Config{})
 	require.NoError(t, err)
 
-	r, err := Open(dbPath, key, salt)
+	r, err := Open(dbPath, key, SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: salt, JournalMode: "WAL"})
 	require.NoError(t, err)
 	defer requireClose(t, r)
 

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/ipfs/go-datastore"
-	config "github.com/ipfs/go-ipfs-config"
+	config "github.com/ipfs/kubo/config"
 	ma "github.com/multiformats/go-multiaddr"
 	"github.com/stretchr/testify/require"
 )

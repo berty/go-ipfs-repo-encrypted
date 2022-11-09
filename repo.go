@@ -6,10 +6,10 @@ import (
 
 	"github.com/ipfs/go-datastore"
 	"github.com/ipfs/go-filestore"
-	config "github.com/ipfs/go-ipfs-config"
+	config "github.com/ipfs/kubo/config"
 	keystore "github.com/ipfs/go-ipfs-keystore"
-	"github.com/ipfs/go-ipfs/repo"
-	"github.com/ipfs/go-ipfs/repo/common"
+	"github.com/ipfs/kubo/repo"
+	"github.com/ipfs/kubo/repo/common"
 	ma "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 )

@@ -3,14 +3,16 @@ package encrepo
 import (
 	"context"
 	"fmt"
+	"net"
 
 	"github.com/ipfs/go-datastore"
 	"github.com/ipfs/go-filestore"
-	config "github.com/ipfs/go-ipfs-config"
 	keystore "github.com/ipfs/go-ipfs-keystore"
-	"github.com/ipfs/go-ipfs/repo"
-	"github.com/ipfs/go-ipfs/repo/common"
+	config "github.com/ipfs/kubo/config"
+	"github.com/ipfs/kubo/repo"
+	"github.com/ipfs/kubo/repo/common"
 	ma "github.com/multiformats/go-multiaddr"
+	manet "github.com/multiformats/go-multiaddr/net"
 	"github.com/pkg/errors"
 )
 
@@ -43,6 +45,33 @@ func (r *encRepo) BackupConfig(prefix string) (string, error) {
 	// Not implemented since the implementation of this in fsrepo makes no sense
 	// The backup file name is randomly generated within the function but not returned, so it's not possible to find the backup file afterwards
 	return "", errors.New("not implemented")
+}
+
+// SetGatewayAddr sets the Gateway address in the repo.
+func (r *encRepo) SetGatewayAddr(addr net.Addr) error {
+	packageLock.Lock()
+	defer packageLock.Unlock()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	m, err := manet.FromNetAddr(addr)
+	if err != nil {
+		return fmt.Errorf("unable to parse addr `%s` to multiaddr: %w", m.String(), err)
+	}
+
+	bytes, err := m.MarshalBinary()
+	if err != nil {
+		return errors.Wrap(err, "marshal ma")
+	}
+
+	key := datastore.NewKey("gateway")
+	if err := r.root.Put(ctx, key, bytes); err != nil {
+		return errors.Wrap(err, fmt.Sprintf("put '%s' in ds", key))
+	}
+
+	return nil
+
 }
 
 // SetConfig persists the given configuration struct to storage.

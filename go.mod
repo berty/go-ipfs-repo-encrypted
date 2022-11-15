@@ -10,7 +10,7 @@ require (
 	github.com/ipfs/kubo v0.16.0
 	github.com/libp2p/go-libp2p v0.23.3
 	github.com/multiformats/go-multiaddr v0.7.0
-	github.com/mutecomm/go-sqlcipher/v4 v4.0.0-00010101000000-000000000000
+	github.com/mutecomm/go-sqlcipher/v4 v4.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.0
 )
@@ -79,4 +79,4 @@ require (
 	lukechampine.com/blake3 v1.1.7 // indirect
 )
 
-replace github.com/mutecomm/go-sqlcipher/v4 => github.com/berty/go-sqlcipher/v4 v4.4.3-0.20220810151512-74ea78235b48 // plaintext header support
+replace github.com/mutecomm/go-sqlcipher/v4 v4.0.0 => github.com/berty/go-sqlcipher/v4 v4.4.3-0.20220810151512-74ea78235b48 // plaintext header support

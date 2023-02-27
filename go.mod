@@ -12,7 +12,7 @@ require (
 	github.com/multiformats/go-multiaddr v0.7.0
 	github.com/mutecomm/go-sqlcipher/v4 v4.4.2
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.2
 )
 
 require (

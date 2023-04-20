@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -20,7 +19,7 @@ import (
 
 // swap arg order
 func testRepoPath(p string, t *testing.T) string {
-	dir, err := ioutil.TempDir(t.TempDir(), p)
+	dir, err := os.MkdirTemp(t.TempDir(), p)
 	require.NoError(t, err)
 	return filepath.Join(dir, "db.sqlite")
 }

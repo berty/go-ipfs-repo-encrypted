@@ -11,6 +11,7 @@ import (
 	config "github.com/ipfs/kubo/config"
 	"github.com/ipfs/kubo/repo"
 	"github.com/ipfs/kubo/repo/common"
+	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
 	ma "github.com/multiformats/go-multiaddr"
 	manet "github.com/multiformats/go-multiaddr/net"
 	"github.com/pkg/errors"
@@ -248,4 +249,12 @@ func (r *encRepo) Close() error {
 	r.closed = true
 
 	return r.root.Close()
+}
+
+func (r *encRepo) UserResourceOverrides() (rcmgr.PartialLimitConfig, error) {
+	// @NOTE(gfanton): this method is a noop for the moment, but we can use a
+	// system similar that the one in `ipfs/fsrepo` by using a file or environments
+	// variables. cf. https://github.com/ipfs/kubo/blob/353dd49be239be651650c3ef3dfef83deebac58c/repo/fsrepo/fsrepo.go#L446
+	// this method is only here to fullfil the `repo.Repo` interface
+	return rcmgr.PartialLimitConfig{}, nil
 }

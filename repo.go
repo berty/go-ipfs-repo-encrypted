@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/ipfs/boxo/filestore"
+	keystore "github.com/ipfs/boxo/keystore"
 	"github.com/ipfs/go-datastore"
-	"github.com/ipfs/go-filestore"
-	keystore "github.com/ipfs/go-ipfs-keystore"
 	config "github.com/ipfs/kubo/config"
 	"github.com/ipfs/kubo/repo"
 	"github.com/ipfs/kubo/repo/common"
@@ -184,9 +184,17 @@ func (r *encRepo) GetConfigKey(key string) (interface{}, error) {
 	return common.MapGetKV(cfg, key)
 }
 
-// Datastore returns a reference to the configured data storage backend.
-func (r *encRepo) Datastore() repo.Datastore {
-	return r.ds
+func (r *encRepo) UserResourceOverrides() (rcmgr.PartialLimitConfig, error) {
+	// @TODO(gfanton): not implemented yet
+	return rcmgr.PartialLimitConfig{}, nil
+}
+
+func (r *encRepo) Datastore() (ds repo.Datastore) {
+	packageLock.Lock()
+	ds = r.ds
+	packageLock.Unlock()
+
+	return
 }
 
 // GetStorageUsage returns the number of bytes stored.

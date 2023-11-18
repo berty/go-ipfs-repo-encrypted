@@ -3,9 +3,9 @@ package encrepo
 import (
 	"context"
 
+	keystore "github.com/ipfs/boxo/keystore"
 	"github.com/ipfs/go-datastore"
 	"github.com/ipfs/go-datastore/query"
-	keystore "github.com/ipfs/go-ipfs-keystore"
 	ci "github.com/libp2p/go-libp2p/core/crypto"
 )
 

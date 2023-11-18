@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/ipfs/boxo/filestore"
+	keystore "github.com/ipfs/boxo/keystore"
 	"github.com/ipfs/go-datastore"
-	"github.com/ipfs/go-filestore"
-	keystore "github.com/ipfs/go-ipfs-keystore"
 	config "github.com/ipfs/kubo/config"
 	"github.com/ipfs/kubo/repo"
 	"github.com/ipfs/kubo/repo/common"

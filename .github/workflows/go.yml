@@ -11,8 +11,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        golang: [ '1.19.x', '1.20.x' ]
-        os: ['windows-latest', 'macos-latest', 'ubuntu-latest']
+        golang: ["1.20.x", "1.21.x"]
+        os: ["windows-latest", "macos-latest", "ubuntu-latest"]
     env:
       OS: ${{ matrix.os }}
       GOLANG: ${{ matrix.golang }}

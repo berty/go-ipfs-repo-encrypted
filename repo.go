@@ -22,8 +22,11 @@ type encRepo struct {
 	ds     repo.Datastore
 	ks     keystore.Keystore
 	config *config.Config
+	path   string
 	closed bool
 }
+
+func (r *encRepo) Path() string { return r.path }
 
 var _ repo.Repo = (*encRepo)(nil)
 

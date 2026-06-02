@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ipfs/kubo/thirdparty/assert"
 	"github.com/stretchr/testify/require"
 
 	datastore "github.com/ipfs/go-datastore"
@@ -77,8 +76,8 @@ func TestCanManageReposIndependently(t *testing.T) {
 	bOpts := SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: bSalt}
 
 	t.Log("initialize two repos")
-	assert.Nil(Init(pathA, aKey, aOpts, &config.Config{Datastore: testingDatastoreConfig()}), t, "a", "should initialize successfully")
-	assert.Nil(Init(pathB, bKey, bOpts, &config.Config{Datastore: testingDatastoreConfig()}), t, "b", "should initialize successfully")
+	require.NoError(t, Init(pathA, aKey, aOpts, &config.Config{Datastore: testingDatastoreConfig()}), "a", "should initialize successfully")
+	require.NoError(t, Init(pathB, bKey, bOpts, &config.Config{Datastore: testingDatastoreConfig()}), "b", "should initialize successfully")
 
 	t.Log("ensure repos initialized")
 	isInit, err := IsInitialized(pathA, aKey, aOpts)
@@ -90,17 +89,17 @@ func TestCanManageReposIndependently(t *testing.T) {
 
 	t.Log("open the two repos")
 	repoA, err := Open(pathA, aKey, aOpts)
-	assert.Nil(err, t, "a")
+	require.NoError(t, err, "a")
 	repoB, err := Open(pathB, bKey, bOpts)
-	assert.Nil(err, t, "b")
+	require.NoError(t, err, "b")
 
 	t.Log("close and remove b while a is open")
-	assert.Nil(repoB.Close(), t, "close b")
-	assert.Nil(Remove(pathB), t, "remove b")
+	require.NoError(t, repoB.Close(), "close b")
+	require.NoError(t, Remove(pathB), "remove b")
 
 	t.Log("close and remove a")
-	assert.Nil(repoA.Close(), t)
-	assert.Nil(Remove(pathA), t)
+	require.NoError(t, repoA.Close())
+	require.NoError(t, Remove(pathA))
 }
 
 func TestDatastoreGetNotAllowedAfterClose(t *testing.T) {
@@ -122,11 +121,11 @@ func TestDatastoreGetNotAllowedAfterClose(t *testing.T) {
 
 	k := "key"
 	data := []byte(k)
-	assert.Nil(r.Datastore().Put(ctx, datastore.NewKey(k), data), t, "Put should be successful")
+	require.NoError(t, r.Datastore().Put(ctx, datastore.NewKey(k), data), "Put should be successful")
 
-	assert.Nil(r.Close(), t)
+	require.NoError(t, r.Close())
 	_, err = r.Datastore().Get(ctx, datastore.NewKey(k))
-	assert.Err(err, t, "after closer, Get should be fail")
+	require.Error(t, err, "after closer, Get should be fail")
 }
 
 func TestDatastorePersistsFromRepoToRepo(t *testing.T) {
@@ -139,21 +138,21 @@ func TestDatastorePersistsFromRepoToRepo(t *testing.T) {
 	salt := testingSalt(t)
 	opts := SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: salt, JournalMode: "WAL"}
 
-	assert.Nil(Init(path, key, opts, &config.Config{Datastore: testingDatastoreConfig()}), t)
+	require.NoError(t, Init(path, key, opts, &config.Config{Datastore: testingDatastoreConfig()}))
 	r1, err := Open(path, key, opts)
-	assert.Nil(err, t)
+	require.NoError(t, err)
 
 	k := "key"
 	expected := []byte(k)
-	assert.Nil(r1.Datastore().Put(ctx, datastore.NewKey(k), expected), t, "using first repo, Put should be successful")
-	assert.Nil(r1.Close(), t)
+	require.NoError(t, r1.Datastore().Put(ctx, datastore.NewKey(k), expected), "using first repo, Put should be successful")
+	require.NoError(t, r1.Close())
 
 	r2, err := Open(path, key, opts)
-	assert.Nil(err, t)
+	require.NoError(t, err)
 	actual, err := r2.Datastore().Get(ctx, datastore.NewKey(k))
-	assert.Nil(err, t, "using second repo, Get should be successful")
-	assert.Nil(r2.Close(), t)
-	assert.True(bytes.Equal(expected, actual), t, "data should match")
+	require.NoError(t, err, "using second repo, Get should be successful")
+	require.NoError(t, r2.Close())
+	require.True(t, bytes.Equal(expected, actual), "data should match")
 }
 
 func TestOpenMoreThanOnceInSameProcess(t *testing.T) {
@@ -164,14 +163,14 @@ func TestOpenMoreThanOnceInSameProcess(t *testing.T) {
 	salt := testingSalt(t)
 	opts := SQLCipherDatastoreOptions{PlaintextHeader: true, Salt: salt, JournalMode: "WAL"}
 
-	assert.Nil(Init(path, key, opts, &config.Config{Datastore: testingDatastoreConfig()}), t)
+	require.NoError(t, Init(path, key, opts, &config.Config{Datastore: testingDatastoreConfig()}))
 
 	r1, err := Open(path, key, opts)
-	assert.Nil(err, t, "first repo should open successfully")
+	require.NoError(t, err, "first repo should open successfully")
 	r2, err := Open(path, key, opts)
-	assert.Nil(err, t, "second repo should open successfully")
-	assert.True(r1 == r2, t, "second open returns same value")
+	require.NoError(t, err, "second repo should open successfully")
+	require.True(t, r1 == r2, "second open returns same value")
 
-	assert.Nil(r1.Close(), t)
-	assert.Nil(r2.Close(), t)
+	require.NoError(t, r1.Close())
+	require.NoError(t, r2.Close())
 }

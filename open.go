@@ -43,5 +43,6 @@ func open(ctx context.Context, dbPath string, key []byte, opts SQLCipherDatastor
 		ds:     NewNamespacedDatastore(root, datastore.NewKey("data")),
 		ks:     KeystoreFromDatastore(NewNamespacedDatastore(root, datastore.NewKey("keys"))),
 		config: conf,
+		path:   dbPath,
 	}, nil
 }

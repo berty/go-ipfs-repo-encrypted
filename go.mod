@@ -1,15 +1,13 @@
 module berty.tech/go-ipfs-repo-encrypted
 
-go 1.26.2
-
-toolchain go1.26.3
+go 1.26.4
 
 require (
 	github.com/ipfs/boxo v0.41.0
 	github.com/ipfs/go-datastore v0.9.1
 	github.com/ipfs/go-ds-sql v0.3.2
 	github.com/ipfs/go-ipfs-keystore v0.1.1
-	github.com/ipfs/kubo v0.41.0
+	github.com/ipfs/kubo v0.42.0
 	github.com/libp2p/go-libp2p v0.48.0
 	github.com/multiformats/go-multiaddr v0.16.1
 	github.com/mutecomm/go-sqlcipher/v4 v4.4.2
@@ -25,8 +23,8 @@ require (
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/caddyserver/certmagic v0.23.0 // indirect
-	github.com/caddyserver/zerossl v0.1.3 // indirect
+	github.com/caddyserver/certmagic v0.25.3 // indirect
+	github.com/caddyserver/zerossl v0.1.5 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cockroachdb/crlib v0.0.0-20241112164430-1264a2edc35b // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
@@ -62,7 +60,7 @@ require (
 	github.com/ipfs/go-cid v0.6.1 // indirect
 	github.com/ipfs/go-cidutil v0.1.1 // indirect
 	github.com/ipfs/go-dsqueue v0.2.0 // indirect
-	github.com/ipfs/go-ipfs-cmds v0.16.0 // indirect
+	github.com/ipfs/go-ipfs-cmds v0.16.1 // indirect
 	github.com/ipfs/go-ipfs-redirects-file v0.1.2 // indirect
 	github.com/ipfs/go-ipld-cbor v0.2.1 // indirect
 	github.com/ipfs/go-ipld-format v0.6.3 // indirect
@@ -74,15 +72,15 @@ require (
 	github.com/ipld/go-car/v2 v2.17.0 // indirect
 	github.com/ipld/go-codec-dagpb v1.7.0 // indirect
 	github.com/ipld/go-ipld-prime v0.24.0 // indirect
-	github.com/ipshipyard/p2p-forge v0.8.0 // indirect
+	github.com/ipshipyard/p2p-forge v0.9.0 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jbenet/go-temp-err-catcher v0.1.0 // indirect
-	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/koron/go-ssdp v0.0.6 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/libdns/libdns v1.0.0-beta.1 // indirect
+	github.com/libdns/libdns v1.1.1 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-cidranger v1.1.0 // indirect
 	github.com/libp2p/go-doh-resolver v0.5.0 // indirect
@@ -96,7 +94,7 @@ require (
 	github.com/libp2p/go-netroute v0.4.0 // indirect
 	github.com/libp2p/go-reuseport v0.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
-	github.com/mholt/acmez/v3 v3.1.2 // indirect
+	github.com/mholt/acmez/v3 v3.1.6 // indirect
 	github.com/miekg/dns v1.1.72 // indirect
 	github.com/minio/minlz v1.0.1-0.20250507153514-87eb42fe8882 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
@@ -166,7 +164,7 @@ require (
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
-	golang.org/x/time v0.14.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gonum.org/v1/gonum v0.17.0 // indirect

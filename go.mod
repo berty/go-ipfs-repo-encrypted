@@ -5,7 +5,7 @@ go 1.26.4
 require (
 	github.com/ipfs/boxo v0.41.0
 	github.com/ipfs/go-datastore v0.9.1
-	github.com/ipfs/go-ds-sql v0.3.2
+	github.com/ipfs/go-ds-sql v0.3.3
 	github.com/ipfs/go-ipfs-keystore v0.1.1
 	github.com/ipfs/kubo v0.42.0
 	github.com/libp2p/go-libp2p v0.48.0

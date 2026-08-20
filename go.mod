@@ -3,7 +3,7 @@ module berty.tech/go-ipfs-repo-encrypted
 go 1.26.5
 
 require (
-	github.com/ipfs/boxo v0.42.1
+	github.com/ipfs/boxo v0.42.2
 	github.com/ipfs/go-datastore v0.9.2
 	github.com/ipfs/go-ds-sql v0.3.4
 	github.com/ipfs/go-ipfs-keystore v0.1.1
